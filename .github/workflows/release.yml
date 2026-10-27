@@ -19,9 +19,9 @@ jobs:
       - run: npm ci
       - run: npm run compile
       - name: Package
-        run: npx @vscode/vsce package --out codewalk-${GITHUB_REF_NAME#v}.vsix
+        run: npx @vscode/vsce package --out codewalk-tours-${GITHUB_REF_NAME#v}.vsix
       - name: Publish to VS Code Marketplace
-        run: npx @vscode/vsce publish --packagePath codewalk-${GITHUB_REF_NAME#v}.vsix
+        run: npx @vscode/vsce publish --packagePath codewalk-tours-${GITHUB_REF_NAME#v}.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
       - name: GitHub release with VSIX
