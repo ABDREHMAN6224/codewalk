@@ -3,7 +3,7 @@
   "displayName": "CodeWalk – Interactive Code Walkthroughs",
   "description": "Guided, step-by-step walkthroughs of a codebase, shown as inline bubbles on the code. Generate them with Claude Code, record them by hand, or build them from a git diff.",
   "version": "0.1.0",
-  "publisher": "abdulrehman",
+  "publisher": "AbdulRehmanMemon",
   "author": {
     "name": "Abdul Rehman"
   },
