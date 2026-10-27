@@ -1,0 +1,80 @@
+{
+  "$schema": "https://codewalk.dev/schema/tour-v1.json",
+  "title": "How CodeWalk works",
+  "description": "A walkthrough of this extension's own source: the tour format, the inline bubble player, and how Claude Code is used to generate tours.",
+  "createdBy": "manual",
+  "steps": [
+    {
+      "title": "A walkthrough is just JSON",
+      "file": "src/model.ts",
+      "line": 5,
+      "endLine": 20,
+      "body": "Everything starts with this shape. A **tour** is a title plus an ordered list of **steps**; each step points at a file and a 1-based line range and carries a Markdown body.\n\nTours live in `.codewalk/*.tour.json` inside the repo, so they are committed and shared like any other file — exactly what you are reading right now.",
+      "anchor": "export interface TourStep {"
+    },
+    {
+      "title": "Surviving edits: re-anchoring",
+      "file": "src/model.ts",
+      "line": 164,
+      "endLine": 175,
+      "body": "Line numbers rot as code changes. Each step stores the trimmed text of its first line as an `anchor`; when the tour plays, if that line no longer matches we search ±200 lines for it and move the highlight there.\n\nIt is cheap and surprisingly effective — most edits shift code rather than rewrite the exact line you anchored on.",
+      "anchor": "export function reanchor(doc: vscode.TextDocument, step: TourStep): number {"
+    },
+    {
+      "title": "The bubble is a comment thread",
+      "file": "src/player.ts",
+      "line": 21,
+      "endLine": 25,
+      "body": "VS Code does not let extensions float arbitrary HTML over the editor, but the **Comments API** gives us an inline, Markdown-capable card attached to a line — which is exactly the website-tour feel we want.\n\nWe create one `CommentController` and deny all commenting ranges, so nobody can reply to the bubble; it is purely a display surface.",
+      "anchor": "this.controller = vscode.comments.createCommentController('codewalk', 'CodeWalk');"
+    },
+    {
+      "title": "Showing a step",
+      "file": "src/player.ts",
+      "line": 130,
+      "endLine": 164,
+      "body": "`show()` does the real work: open the document, compute the (possibly re-anchored) range, reveal it centred, then **dispose and recreate** the thread at the last highlighted line.\n\nRecreating rather than moving the thread turned out to be the only reliable way to make the bubble follow the step across files.",
+      "anchor": "private async show(): Promise<void> {"
+    },
+    {
+      "title": "Spotlight and dimming",
+      "file": "src/player.ts",
+      "line": 201,
+      "endLine": 226,
+      "body": "Two decoration types: a tinted, left-bordered highlight for the step's lines, and an `opacity: 0.45` decoration applied to everything *else* in the file. Together they read like the dark overlay a web product tour draws around the element it is pointing at.\n\nBoth are re-applied whenever visible editors change, so splitting or re-opening the file keeps the spotlight.",
+      "anchor": "private async applyDecorations(): Promise<void> {"
+    },
+    {
+      "title": "Asking Claude Code for a tour",
+      "file": "src/generator.ts",
+      "line": 182,
+      "endLine": 197,
+      "body": "Generation is a single prompt to the `claude` CLI. We describe the scope (file, selection, folder, whole repo, or a git diff), the desired depth from the `codewalk.detailLevel` setting, and — most importantly — the exact JSON shape to return.\n\nClaude is given **read-only tools** (`Read, Glob, Grep, LS`) so it can open files itself and verify line numbers rather than guessing.",
+      "anchor": "function buildPrompt(scope: Scope, focus: string): string {"
+    },
+    {
+      "title": "Running the CLI",
+      "file": "src/generator.ts",
+      "line": 301,
+      "endLine": 317,
+      "body": "`claude -p … --output-format json --allowedTools Read,Glob,Grep,LS` runs with the workspace as its working directory. Prompts over ~60 KB (big diffs) are written to a temp file that Claude is told to read, to stay under the OS argument-length limit.\n\nThe process is cancellable from the progress notification, and stderr streams into the *CodeWalk* output channel for debugging.",
+      "anchor": "const args = ['-p', promptArg, '--output-format', 'json', '--allowedTools', 'Read,Glob,Grep,LS', ...(model ? ['--model', model] : []), ...extra];"
+    },
+    {
+      "title": "Validating what came back",
+      "file": "src/generator.ts",
+      "line": 158,
+      "endLine": 178,
+      "body": "LLM output is never trusted blindly. The JSON block is extracted and validated, steps that point at files which do not exist are **dropped**, and an anchor is captured for each surviving step before the tour is written to disk.",
+      "anchor": "const kept: typeof tour.steps = [];"
+    },
+    {
+      "title": "Wiring it all up",
+      "file": "src/extension.ts",
+      "line": 12,
+      "endLine": 34,
+      "body": "`activate()` creates the player and the sidebar tree, then watches `**/*.tour.json`. Editing a tour file while it is playing hot-reloads the current step, which makes hand-tuning a generated walkthrough pleasant: tweak the JSON, see the bubble update.\n\nThat's the whole loop. Press **Next** to finish, or jump around with the status-bar item.",
+      "anchor": "export function activate(context: vscode.ExtensionContext): void {"
+    }
+  ]
+}

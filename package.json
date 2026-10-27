@@ -1,0 +1,157 @@
+{
+  "name": "codewalk",
+  "displayName": "CodeWalk – Interactive Code Walkthroughs",
+  "description": "Guided, step-by-step walkthroughs of a codebase, shown as inline bubbles on the code. Generate them with Claude Code, record them by hand, or build them from a git diff.",
+  "version": "0.1.0",
+  "publisher": "alexein",
+  "license": "MIT",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Education", "Other"],
+  "keywords": ["walkthrough", "tour", "onboarding", "claude", "documentation"],
+  "icon": "media/icon.png",
+  "activationEvents": ["workspaceContains:.codewalk/**/*.tour.json", "onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "codewalk.startTour", "title": "Start Walkthrough", "category": "CodeWalk", "icon": "$(play)" },
+      { "command": "codewalk.nextStep", "title": "Next Step", "category": "CodeWalk", "icon": "$(arrow-right)" },
+      { "command": "codewalk.prevStep", "title": "Previous Step", "category": "CodeWalk", "icon": "$(arrow-left)" },
+      { "command": "codewalk.exitTour", "title": "Exit Walkthrough", "category": "CodeWalk", "icon": "$(close)" },
+      { "command": "codewalk.goToStep", "title": "Go To Step…", "category": "CodeWalk", "icon": "$(list-ordered)" },
+      { "command": "codewalk.generate", "title": "Generate Walkthrough with Claude Code…", "category": "CodeWalk", "icon": "$(sparkle)" },
+      { "command": "codewalk.generateFromDiff", "title": "Generate Walkthrough from Git Diff…", "category": "CodeWalk", "icon": "$(git-compare)" },
+      { "command": "codewalk.newTour", "title": "New Empty Walkthrough", "category": "CodeWalk", "icon": "$(add)" },
+      { "command": "codewalk.recordStep", "title": "Add Step from Selection…", "category": "CodeWalk", "icon": "$(record)" },
+      { "command": "codewalk.editStep", "title": "Edit Step Text…", "category": "CodeWalk", "icon": "$(edit)" },
+      { "command": "codewalk.deleteStep", "title": "Delete Step", "category": "CodeWalk", "icon": "$(trash)" },
+      { "command": "codewalk.moveStepUp", "title": "Move Step Up", "category": "CodeWalk", "icon": "$(arrow-up)" },
+      { "command": "codewalk.moveStepDown", "title": "Move Step Down", "category": "CodeWalk", "icon": "$(arrow-down)" },
+      { "command": "codewalk.openTourFile", "title": "Open Walkthrough JSON", "category": "CodeWalk", "icon": "$(json)" },
+      { "command": "codewalk.deleteTour", "title": "Delete Walkthrough", "category": "CodeWalk", "icon": "$(trash)" },
+      { "command": "codewalk.exportMarkdown", "title": "Export Walkthrough as Markdown", "category": "CodeWalk", "icon": "$(markdown)" },
+      { "command": "codewalk.importTour", "title": "Import Walkthrough (file or URL)…", "category": "CodeWalk", "icon": "$(cloud-download)" },
+      { "command": "codewalk.refresh", "title": "Refresh", "category": "CodeWalk", "icon": "$(refresh)" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "codewalk", "title": "CodeWalk", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "codewalk": [
+        { "id": "codewalk.tours", "name": "Walkthroughs", "icon": "media/icon.svg", "contextualTitle": "CodeWalk" }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "codewalk.tours",
+        "contents": "No walkthroughs in this workspace yet.\n\n[$(sparkle) Generate with Claude Code](command:codewalk.generate)\n\n[$(git-compare) Generate from Git Diff](command:codewalk.generateFromDiff)\n\n[$(add) New Empty Walkthrough](command:codewalk.newTour)\n\n[$(cloud-download) Import](command:codewalk.importTour)\n\nWalkthroughs are stored in `.codewalk/` so you can commit and share them."
+      }
+    ],
+    "keybindings": [
+      { "command": "codewalk.nextStep", "key": "ctrl+alt+right", "mac": "cmd+alt+right", "when": "codewalk.active" },
+      { "command": "codewalk.prevStep", "key": "ctrl+alt+left", "mac": "cmd+alt+left", "when": "codewalk.active" },
+      { "command": "codewalk.exitTour", "key": "ctrl+alt+escape", "mac": "cmd+alt+escape", "when": "codewalk.active" },
+      { "command": "codewalk.recordStep", "key": "ctrl+alt+r", "mac": "cmd+alt+r", "when": "editorHasSelection" }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "codewalk.nextStep", "when": "codewalk.active" },
+        { "command": "codewalk.prevStep", "when": "codewalk.active" },
+        { "command": "codewalk.exitTour", "when": "codewalk.active" },
+        { "command": "codewalk.goToStep", "when": "codewalk.active" },
+        { "command": "codewalk.editStep", "when": "false" },
+        { "command": "codewalk.deleteStep", "when": "false" },
+        { "command": "codewalk.moveStepUp", "when": "false" },
+        { "command": "codewalk.moveStepDown", "when": "false" },
+        { "command": "codewalk.deleteTour", "when": "false" },
+        { "command": "codewalk.refresh", "when": "false" }
+      ],
+      "comments/commentThread/title": [
+        { "command": "codewalk.prevStep", "group": "inline@1", "when": "commentController == codewalk" },
+        { "command": "codewalk.nextStep", "group": "inline@2", "when": "commentController == codewalk" },
+        { "command": "codewalk.goToStep", "group": "inline@3", "when": "commentController == codewalk" },
+        { "command": "codewalk.exitTour", "group": "inline@4", "when": "commentController == codewalk" }
+      ],
+      "view/title": [
+        { "command": "codewalk.generate", "group": "navigation@1", "when": "view == codewalk.tours" },
+        { "command": "codewalk.generateFromDiff", "group": "navigation@2", "when": "view == codewalk.tours" },
+        { "command": "codewalk.newTour", "group": "navigation@3", "when": "view == codewalk.tours" },
+        { "command": "codewalk.refresh", "group": "navigation@4", "when": "view == codewalk.tours" },
+        { "command": "codewalk.importTour", "group": "1_more", "when": "view == codewalk.tours" }
+      ],
+      "view/item/context": [
+        { "command": "codewalk.startTour", "group": "inline@1", "when": "view == codewalk.tours && viewItem == tour" },
+        { "command": "codewalk.exportMarkdown", "group": "inline@2", "when": "view == codewalk.tours && viewItem == tour" },
+        { "command": "codewalk.openTourFile", "group": "1_edit@1", "when": "view == codewalk.tours && viewItem == tour" },
+        { "command": "codewalk.exportMarkdown", "group": "1_edit@2", "when": "view == codewalk.tours && viewItem == tour" },
+        { "command": "codewalk.deleteTour", "group": "9_danger", "when": "view == codewalk.tours && viewItem == tour" },
+        { "command": "codewalk.editStep", "group": "inline@1", "when": "view == codewalk.tours && viewItem == step" },
+        { "command": "codewalk.moveStepUp", "group": "1_edit@1", "when": "view == codewalk.tours && viewItem == step" },
+        { "command": "codewalk.moveStepDown", "group": "1_edit@2", "when": "view == codewalk.tours && viewItem == step" },
+        { "command": "codewalk.deleteStep", "group": "9_danger", "when": "view == codewalk.tours && viewItem == step" }
+      ],
+      "editor/context": [
+        { "command": "codewalk.recordStep", "group": "codewalk@1", "when": "editorHasSelection" },
+        { "command": "codewalk.generate", "group": "codewalk@2" }
+      ],
+      "explorer/context": [
+        { "command": "codewalk.generate", "group": "codewalk@1" }
+      ]
+    },
+    "configuration": {
+      "title": "CodeWalk",
+      "properties": {
+        "codewalk.claudePath": {
+          "type": "string",
+          "default": "claude",
+          "description": "Path to the Claude Code CLI executable."
+        },
+        "codewalk.claudeModel": {
+          "type": "string",
+          "default": "",
+          "description": "Model to pass to Claude Code (--model). Leave empty for the CLI default."
+        },
+        "codewalk.claudeExtraArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Extra arguments appended to every Claude Code invocation."
+        },
+        "codewalk.detailLevel": {
+          "type": "string",
+          "enum": ["overview", "detailed", "exhaustive"],
+          "default": "detailed",
+          "description": "How deep generated walkthroughs should go. 'exhaustive' asks Claude to explain nearly every meaningful block."
+        },
+        "codewalk.toursDirectory": {
+          "type": "string",
+          "default": ".codewalk",
+          "description": "Workspace-relative folder where walkthrough files (*.tour.json) are stored."
+        },
+        "codewalk.highlightColor": {
+          "type": "string",
+          "default": "rgba(255, 200, 0, 0.18)",
+          "description": "Background colour used to spotlight the current step's lines."
+        },
+        "codewalk.dimOtherCode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fade the rest of the file while a step is shown, so the highlighted lines stand out."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.1.0",
+    "typescript": "^5.4.0"
+  }
+}
